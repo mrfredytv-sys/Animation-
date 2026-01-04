@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Archimedisches Prinzip – Simulation</title>
+
+<style>
+body{
+  font-family: Arial, sans-serif;
+  background:#eef3f6;
+  text-align:center;
+}
+button{
+  margin:6px;
+  padding:8px 14px;
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Archimedisches Prinzip – Schülerexperiment (Klasse 8)</h2>
+
+<svg width="900" height="520">
+
+<!-- Aufhängung -->
+<circle cx="450" cy="120" r="6" fill="#333"/>
+
+<!-- ================= WAAGE ================= -->
+<g id="scale">
+  <rect x="300" y="115" width="300" height="10" fill="#444"/>
+
+  <!-- Linke Seite -->
+  <line x1="320" y1="125" x2="320" y2="190" stroke="#444" stroke-width="3"/>
+  <rect id="hollow" x="290" y="190" width="60" height="45" rx="6"
+        fill="#f7b733" opacity="0"/>
+  <line id="link" x1="320" y1="235" x2="320" y2="330"
+        stroke="#444" stroke-width="3" opacity="0"/>
+  <rect id="body" x="295" y="330" width="50" height="110" rx="6"
+        fill="#ffeb3b" opacity="0"/>
+
+  <!-- Rechte Seite -->
+  <line x1="580" y1="125" x2="580" y2="190" stroke="#444" stroke-width="3"/>
+  <rect id="counter" x="555" y="190" width="50" height="45" rx="6"
+        fill="#999" opacity="0"/>
+</g>
+
+<!-- ================= ÜBERLAUFGEFÄSS ================= -->
+<g id="beaker" transform="translate(-220,-60)">
+  <rect x="240" y="280" width="160" height="230"
+        fill="none" stroke="#0077b6" stroke-width="4"/>
+  <rect x="400" y="320" width="45" height="18"
+        fill="none" stroke="#0077b6" stroke-width="4"/>
+  <rect id="pipeWater" x="400" y="330" width="45" height="8"
+        fill="#4fc3f7" opacity="0"/>
+  <rect id="water" x="240" y="335" width="160" height="175"
+        fill="#4fc3f7" opacity="0.55"/>
+  <rect id="stream" x="445" y="338" width="6" height="0"
+        fill="#4fc3f7" opacity="0"/>
+</g>
+
+<!-- ================= AUFFANGGEFÄSS ================= -->
+<g id="cup" transform="translate(0,0) rotate(0 570 320)">
+  <rect x="520" y="320" width="110" height="170"
+        fill="none" stroke="#555" stroke-width="3"/>
+  <rect id="cupWater" x="520" y="490" width="110" height="0"
+        fill="#4fc3f7" opacity="0.8"/>
+</g>
+
+</svg>
+
+<p id="text"></p>
+
+<button onclick="phase0()">Phase 0</button>
+<button onclick="phase1()">Phase 1</button>
+<button onclick="phase2()">Phase 2</button>
+<button onclick="phase3()">Phase 3</button>
+
+<script>
+const body = document.getElementById("body");
+const hollow = document.getElementById("hollow");
+const link = document.getElementById("link");
+const counter = document.getElementById("counter");
+const water = document.getElementById("water");
+const pipeWater = document.getElementById("pipeWater");
+const cupWater = document.getElementById("cupWater");
+const stream = document.getElementById("stream");
+const beaker = document.getElementById("beaker");
+const cup = document.getElementById("cup");
+const scale = document.getElementById("scale");
+const text = document.getElementById("text");
+
+let angle=0, targetAngle=0;
+let beakerX=-220, targetBeakerX=-220;
+let cupX=0, targetCupX=0;
+let cupY=0, targetCupY=0;
+let cupRot=0, targetCupRot=0;
+
+function resetStream(){
+  stream.style.opacity = 0;
+  stream.setAttribute("height", 0);
+  stream.setAttribute("x", 445);
+  stream.setAttribute("y", 338);
+}
+
+function animate(){
+  angle += (targetAngle-angle)*0.08;
+  beakerX += (targetBeakerX-beakerX)*0.08;
+  cupX += (targetCupX-cupX)*0.08;
+  cupY += (targetCupY-cupY)*0.08;
+  cupRot += (targetCupRot-cupRot)*0.08;
+
+  scale.setAttribute("transform",`rotate(${angle} 450 120)`);
+  beaker.setAttribute("transform",`translate(${beakerX},-60)`);
+  cup.setAttribute(
+    "transform",
+    `translate(${cupX},${cupY}) rotate(${cupRot} 570 320)`
+  );
+
+  requestAnimationFrame(animate);
+}
+animate();
+
+function setWater(level){
+  water.setAttribute("height", level);
+  water.setAttribute("y", 510 - level);
+}
+
+/* ================= PHASEN ================= */
+
+function phase0(){
+  text.innerHTML="<b>Phase 0:</b> Ausgangszustand";
+
+  body.style.opacity=hollow.style.opacity=link.style.opacity=counter.style.opacity=0;
+  pipeWater.style.opacity=0;
+
+  resetStream();
+
+  targetAngle=0;
+  targetBeakerX=-220;
+  targetCupX=0;
+  targetCupY=0;
+  targetCupRot=0;
+
+  setWater(175);
+  cupWater.setAttribute("height",0);
+}
+
+function phase1(){
+  text.innerHTML="<b>Phase 1:</b> Wiegen im Trockenen";
+
+  body.style.opacity=hollow.style.opacity=link.style.opacity=1;
+  targetAngle=-10;
+
+  setTimeout(()=>{
+    counter.style.opacity=1;
+    targetAngle=0;
+  },1000);
+}
+
+function phase2(){
+  text.innerHTML="<b>Phase 2:</b> Eintauchen – Auftrieb – Überlauf";
+
+  resetStream();
+  pipeWater.style.opacity=0;
+
+  targetBeakerX = 0;
+  targetCupX = -100;
+  targetCupY = 0;
+  targetCupRot = 0;
+  targetAngle = 8;
+
+  cupWater.setAttribute("height",0);
+
+  let level=175, collected=0;
+
+  setTimeout(()=>{
+    function rise(){
+      level+=0.6;
+      setWater(level);
+      if(level>185){
+        overflow();
+      } else requestAnimationFrame(rise);
+    }
+
+    function overflow(){
+      pipeWater.style.opacity=1;
+      stream.style.opacity=1;
+      stream.setAttribute("height",170);
+
+      collected+=0.6;
+      cupWater.setAttribute("height",collected);
+      cupWater.setAttribute("y",490-collected);
+
+      if(collected<55){
+        requestAnimationFrame(overflow);
+      } else {
+        pipeWater.style.opacity=0;
+        resetStream();
+        setWater(175);
+      }
+    }
+    rise();
+  },1200);
+}
+
+function phase3(){
+  text.innerHTML="<b>Phase 3:</b> Verdrängtes Wasser wird in den Hohlkörper gegossen";
+
+  // Auffanggefäß anheben & kippen
+  targetCupX = -260;
+  targetCupY = -250;
+  targetCupRot = -90;
+
+  setTimeout(()=>{
+
+    /* ===============================
+       WASSERSTRAHL – GARANTIERT SICHTBAR
+       =============================== */
+
+    // Oberkante Hohlkörper (orange)
+    const hollowTopY = 190;
+    const hollowCenterX = 320;
+
+ // ===============================
+// WASSERSTRAHL PHASE 3 (KORRIGIERT)
+// ===============================
+const streamHeight = hollowTopY - cupPourY;
+
+stream.setAttribute("x", cupPourX);
+stream.setAttribute("y", cupPourY);
+stream.setAttribute("width", 6);
+stream.setAttribute("height", streamHeight);
+stream.style.opacity = 1;
+
+    let poured = 55;
+
+    function pour(){
+      poured -= 0.7;
+
+      cupWater.setAttribute("height", poured);
+      cupWater.setAttribute("y", 490 - poured);
+
+      targetAngle = 0;
+
+      if(poured > 0){
+        requestAnimationFrame(pour);
+      } else {
+        resetStream();
+      }
+    }
+
+    pour();
+  },800);
+}
+
+
+phase0();
+</script>
+
+</body>
+</html>
